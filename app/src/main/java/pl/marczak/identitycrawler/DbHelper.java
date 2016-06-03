@@ -18,23 +18,32 @@ public class DbHelper extends SQLiteOpenHelper {
     //version of database
     private static final int version = 1;
     //database name
-    public static final String DB_NAME = "notesDB";
+    public static final String DB_NAME = "pokesDB";
     //name of table
-    public static final String TABLE_NAME = "notes";
+    public static final String TABLE_NAME = "pokes";
     //column names
-    public static final String KEY_ID = "id";
-    public static final String KEY_TITLE = "noteTitle";
+    public static final String KEY_ID = "_id";
+    public static final String KEY_NAME = "name";
     public static final String KEY_CONTENT = "noteContent";
     public static final String KEY_DATE = "date";
     //sql query to creating table in database
-    public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME
-            + " (id INTEGER PRIMARY KEY AUTOINCREMENT, " + KEY_TITLE
-            + " TEXT NOT NULL, " + KEY_CONTENT + " TEXT NOT NULL, " + KEY_DATE + " TEXT);";
+    public static final String CREATE_TABLE =
+            "CREATE TABLE IF NOT EXISTS "
+                    + TABLE_NAME
+                    + " (" + KEY_ID + " TEXT, "
+                    + KEY_NAME + " TEXT, "
+                    + KEY_CONTENT + " TEXT, "
+                    + KEY_DATE + " TEXT);";
 
     //contructor of DBHelper
     public DbHelper(Context context) {
         super(context, DB_NAME, null, version);
         this.ctx = context;
+    }
+
+    public DbHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version, Context ctx) {
+        super(context, DB_NAME, factory, 1);
+        this.ctx = ctx;
     }
 
     //creating the table in database
@@ -46,7 +55,7 @@ public class DbHelper extends SQLiteOpenHelper {
 
     //in case of upgrade we're dropping the old table, and create the new one
     @Override
-    public void onUpgrade(SQLiteDatabase db, int arg1, int arg2) {
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 
         db.execSQL("DROP TABLE IF EXIST " + TABLE_NAME);
 
@@ -81,7 +90,7 @@ public class DbHelper extends SQLiteOpenHelper {
     public Cursor getNotes(SQLiteDatabase db) {
         //db.query is like normal sql query
         //cursor contains all notes
-        Cursor c = db.query(TABLE_NAME, new String[]{KEY_TITLE, KEY_CONTENT}, null, null, null, null, "id DESC");
+        Cursor c = db.query(TABLE_NAME, new String[]{KEY_NAME, KEY_CONTENT}, null, null, null, null, "id DESC");
         //moving to the first note
         c.moveToFirst();
         //and returning Cursor object
@@ -91,7 +100,7 @@ public class DbHelper extends SQLiteOpenHelper {
     public Cursor getNotes2(SQLiteDatabase db) {
         //db.query is like normal sql query
         //cursor contains all notes
-        Cursor c = db.query(TABLE_NAME, new String[]{KEY_ID, KEY_TITLE}, null, null, null, null, "id DESC");
+        Cursor c = db.query(TABLE_NAME, new String[]{KEY_ID, KEY_NAME}, null, null, null, null, "id DESC");
         //moving to the first note
         c.moveToFirst();
         //and returning Cursor object
@@ -99,7 +108,7 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     public Cursor getNote(SQLiteDatabase db, int id) {
-        Cursor c = db.query(TABLE_NAME, new String[]{KEY_TITLE, KEY_CONTENT, KEY_DATE}, KEY_ID + " = ?", new String[]{String.valueOf(id)}, null, null, null);
+        Cursor c = db.query(TABLE_NAME, new String[]{KEY_NAME, KEY_CONTENT, KEY_DATE}, KEY_ID + " = ?", new String[]{String.valueOf(id)}, null, null, null);
         c.moveToFirst();
         return c;
     }
@@ -118,7 +127,7 @@ public class DbHelper extends SQLiteOpenHelper {
         cv.put("noteContent", content);
         cv.put("date", new Date().toString());
 
-        db.update(TABLE_NAME, cv, KEY_TITLE + " LIKE '" + editTitle + "'", null);
+        db.update(TABLE_NAME, cv, KEY_NAME + " LIKE '" + editTitle + "'", null);
 
         db.close();
 

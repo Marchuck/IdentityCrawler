@@ -4,9 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import rx.Subscriber;
@@ -59,9 +57,8 @@ public class HttpExecutorService extends Service {
                         Intent i = new Intent("RESULT");
                         i.putExtra("POKE", poke.forms.get(0).name);
                         sendBroadcast(i);
-                        Toast.makeText(HttpExecutorService.this, "RECEIVED", Toast.LENGTH_SHORT).show();
-                    }
+                       }
                 });
-        return Service.START_FLAG_REDELIVERY;
+        return Service.START_NOT_STICKY;
     }
 }
