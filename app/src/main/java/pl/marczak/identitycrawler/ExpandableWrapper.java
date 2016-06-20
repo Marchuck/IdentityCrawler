@@ -1,5 +1,6 @@
 package pl.marczak.identitycrawler;
 
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
@@ -19,7 +20,6 @@ import pl.lukaszmarczak.expandabledelegates.expandable_delegates.DelegatesManage
 import pl.lukaszmarczak.expandabledelegates.expandable_delegates.XChild;
 import pl.lukaszmarczak.expandabledelegates.expandable_delegates.XParent;
 import rx.Observable;
-import rx.functions.Func0;
 
 /**
  * @author Lukasz Marczak
@@ -28,6 +28,7 @@ import rx.functions.Func0;
 public class ExpandableWrapper {
     public static final String TAG = ExpandableWrapper.class.getSimpleName();
     public static final String ANONYMOUS = "Anonymous";
+    public static final int BLANK = 7;
     public static final int PARENT_VIEWTYPE_1 = 1;
     public static final int PARENT_VIEWTYPE_2 = 2;
 
@@ -35,20 +36,54 @@ public class ExpandableWrapper {
     public static final int CHILD_VIEWTYPE_2 = 4;
 
     public static Observable<RecyclerView.Adapter> getAdapter() {
-        return Observable.defer(new Func0<Observable<RecyclerView.Adapter>>() {
-            @Override
-            public Observable<RecyclerView.Adapter> call() {
-                return Observable.just(createAdapter());
-            }
-        });
+        return Observable.defer(() -> Observable.just(createAdapter()));
+    }
+
+    public static Observable<RecyclerView.Adapter> getGoogleMapAdapter(View v) {
+        return Observable.defer(() -> Observable.just(createGoogleAdapter(v)));
+    }
+
+    private static RecyclerView.Adapter createGoogleAdapter(View stealTouchEventsView) {
+        DelegatesManager<Parent, Child> manager = new DelegatesManager<>();
+        manager.addDelegateChild(new ExtendedChildAdapter());
+        manager.addDelegateParent(new ParentAdapter());
+        manager.addDelegateParent(new HeaderParentAdapter());
+        manager.addDelegateParent(new BlankParentAdapter(stealTouchEventsView));
+
+        List<XParent<Parent, Child>> dataSet = new ArrayList<>();
+
+        int wawaColor = Color.parseColor("#ff0055");
+        int gdColor = Color.parseColor("#0ea169");
+        int wrocColor = Color.parseColor("#c4750f");
+
+        List<XChild<Child>> wawaChildren = new ArrayList<>();
+        wawaChildren.add(new XChild<>(new Child("beer", R.drawable.beer, wawaColor), CHILD_VIEWTYPE_2));
+        wawaChildren.add(new XChild<>(new Child("cinema", R.drawable.play, wawaColor), CHILD_VIEWTYPE_2));
+        wawaChildren.add(new XChild<>(new Child("college", R.drawable.school, wawaColor), CHILD_VIEWTYPE_2));
+        wawaChildren.add(new XChild<>(new Child("taxi", R.drawable.car, wawaColor), CHILD_VIEWTYPE_2));
+
+        List<XChild<Child>> wroc = new ArrayList<>();
+        wroc.add(new XChild<>(new Child("college", R.drawable.school, wrocColor), CHILD_VIEWTYPE_2));
+        wroc.add(new XChild<>(new Child("taxi", R.drawable.car, wrocColor), CHILD_VIEWTYPE_2));
+
+        List<XChild<Child>> gdy = new ArrayList<>();
+        gdy.add(new XChild<>(new Child("beer", R.drawable.beer, gdColor), CHILD_VIEWTYPE_2));
+
+        dataSet.add(new XParent<>(new Parent(), new ArrayList<>(), BLANK));
+        dataSet.add(new XParent<>(new Parent("Popular cities", R.drawable.wawa, Color.BLACK), new ArrayList<>(), PARENT_VIEWTYPE_2));
+        dataSet.add(new XParent<>(new Parent("Warszawa", R.drawable.wawa, wawaColor), wawaChildren, PARENT_VIEWTYPE_1));
+         dataSet.add(new XParent<>(new Parent("Gdańsk", R.drawable.gda, gdColor), gdy, PARENT_VIEWTYPE_1));
+        dataSet.add(new XParent<>(new Parent("Wrocław", R.drawable.wroc, wrocColor), wroc, PARENT_VIEWTYPE_1));
+
+        DelegatesAdapter<Parent, Child> delegatesAdapter = new DelegatesAdapter<>(dataSet, manager);
+        return delegatesAdapter;
     }
 
     private static RecyclerView.Adapter createAdapter() {
         DelegatesManager<Parent, Child> manager = new DelegatesManager<>();
-        manager.addDelegateChild(new ChildAdapter());
         manager.addDelegateChild(new ExtendedChildAdapter());
         manager.addDelegateParent(new ParentAdapter());
-        manager.addDelegateParent(new YetAnotherParentAdapter());
+        manager.addDelegateParent(new HeaderParentAdapter());
 
         List<XParent<Parent, Child>> dataSet = new ArrayList<>();
 
@@ -70,10 +105,8 @@ public class ExpandableWrapper {
         children3.add(new XChild<>(new Child("???", R.drawable.cool), CHILD_VIEWTYPE_2));
 
 
-        dataSet.add(new XParent<>(new Parent("Friday", R.drawable.waves), children2, PARENT_VIEWTYPE_1));
-        dataSet.add(new XParent<>(new Parent("Monday", R.drawable.cool), children2, PARENT_VIEWTYPE_2));
-        dataSet.add(new XParent<>(new Parent("Saturday", R.drawable.smallimage), children, PARENT_VIEWTYPE_2));
-        dataSet.add(new XParent<>(new Parent("Weekend", R.drawable.waves), children3, PARENT_VIEWTYPE_1));
+        dataSet.add(new XParent<>(new Parent("Friday", R.drawable.waves, 0), children2, PARENT_VIEWTYPE_1));
+        dataSet.add(new XParent<>(new Parent("Monday", R.drawable.cool, 0), children2, PARENT_VIEWTYPE_2));
 
 
         DelegatesAdapter<Parent, Child> delegatesAdapter = new DelegatesAdapter<>(dataSet, manager);
@@ -83,14 +116,20 @@ public class ExpandableWrapper {
     public static class Parent {
         public boolean clicked;
         public int res;
+        public int color;
 
-        public Parent(String parentName, int res) {
+        public Parent() {
+        }
+
+        public Parent(String parentName, int res, int color) {
             this.parentName = parentName;
             this.res = res;
-
+            this.color = color;
         }
 
         public String parentName;
+
+
     }
 
     public static class Child {
@@ -98,38 +137,22 @@ public class ExpandableWrapper {
         public int backgroundColor;
         public int res;
 
+        public Child(String childName, int res, int backgroundColor) {
+            this.childName = childName;
+            this.res = res;
+            this.backgroundColor = backgroundColor;
+        }
+
         public Child(String childName, int res) {
             this.childName = childName;
             this.res = res;
         }
-    }
-
-    public static class ChildAdapter extends DelegableChildAdapter<Parent, Child> {
-
 
         @Override
-        public int getChildViewType() {
-            return CHILD_VIEWTYPE;
-        }
-
-        @Override
-        public void onBindChildViewHolder(RecyclerView.ViewHolder holder, final int groupPosition,
-                                          final int childPosition, int viewType) {
-            XChild<Child> childWrapper = getDataSet().get(groupPosition).getChildren().get(childPosition);
-            ChildViewHolder vh = (ChildViewHolder) holder;
-            vh.textView.setText(childWrapper.getChild().childName);
-            vh.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                }
-            });
-        }
-
-        @Override
-        public RecyclerView.ViewHolder onCreateChildViewHolder(ViewGroup parent, int viewType) {
-            View v = DelegatesManager.inflateMe(parent, R.layout.child_item_1);
-            return new ChildViewHolder(v);
+        public String toString() {
+            return "childName: " + childName +
+                    ", backgroundColor: " + backgroundColor +
+                    ", res: " + res;
         }
     }
 
@@ -144,37 +167,72 @@ public class ExpandableWrapper {
         public void onBindChildViewHolder(RecyclerView.ViewHolder holder, int groupPosition,
                                           int childPosition, int viewType) {
             XChild<Child> childWrapper = getDataSet().get(groupPosition).getChildren().get(childPosition);
-            ExtendedChildViewHolder vh = (ExtendedChildViewHolder) holder;
-            vh.rootView.setBackgroundColor(childWrapper.getChild().backgroundColor);
-            vh.textView.setImageResource(childWrapper.getChild().res);
+            Child child = childWrapper.getChild();
+            ChildViewHolder vh = (ChildViewHolder) holder;
+            vh.textView.setTextColor(child.backgroundColor);
+            vh.divider.setBackgroundColor(child.backgroundColor);
+            vh.textView.setText(child.childName);
+            vh.rootView.setBackgroundColor(Color.parseColor("#c9c1ac"));
+            vh.imageView.setImageResource(child.res);
+            Log.d(TAG, "child: " + child.toString());
         }
 
         @Override
         public RecyclerView.ViewHolder onCreateChildViewHolder(ViewGroup parent, int viewType) {
             View v = DelegatesManager.inflateMe(parent, R.layout.child_item_2);
-            return new ExtendedChildViewHolder(v);
+            return new ChildViewHolder(v);
         }
     }
 
     public static class ChildViewHolder extends RecyclerView.ViewHolder {
         TextView textView;
         View rootView;
+        ImageView imageView;
+        View divider;
 
         public ChildViewHolder(View itemView) {
             super(itemView);
-            rootView = itemView;
-            textView = (TextView) rootView.findViewById(R.id.child_textView);
+            rootView = itemView.findViewById(R.id.item_root_1);
+            textView = (TextView) rootView.findViewById(R.id.text_child);
+            imageView = (ImageView) rootView.findViewById(R.id.image_child);
+            divider = rootView.findViewById(R.id.divider);
         }
     }
 
-    public static class ExtendedChildViewHolder extends RecyclerView.ViewHolder {
-        ImageView textView;
-        View rootView;
 
-        public ExtendedChildViewHolder(View itemView) {
-            super(itemView);
-            rootView = itemView;
-            textView = (ImageView) rootView.findViewById(R.id.child_imageView2);
+    public static class BlankParentAdapter extends DelegableParentAdapter<Parent, Child> {
+        public BlankParentAdapter(View stealTouchEventsView) {
+            this.stealTouchEventsView = stealTouchEventsView;
+            Log.d(TAG, "BlankParentAdapter: ");
+        }
+
+        private View stealTouchEventsView;
+
+        @Override
+        public int getParentViewType() {
+            return BLANK;
+        }
+
+        @Override
+        public void onBindGroupViewHolder(AbstractExpandableItemViewHolder holder, final int groupPosition, int viewType) {
+        }
+
+        @Override
+        public AbstractExpandableItemViewHolder onCreateGroupViewHolder(ViewGroup parent, int viewType) {
+            View v = DelegatesManager.inflateMe(parent, R.layout.blank_parent);
+            return new AVH(v, stealTouchEventsView);
+        }
+
+        public static class AVH extends AbstractExpandableItemViewHolder {
+
+            public AVH(View itemView, View stealTouchEventsView) {
+                super(itemView);
+//                itemView.setBackgroundColor(Color.TRANSPARENT);
+                itemView.setOnTouchListener((v, event) -> {
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                    return stealTouchEventsView.dispatchTouchEvent(event);
+                });
+            }
         }
     }
 
@@ -190,14 +248,13 @@ public class ExpandableWrapper {
             final AVH avh = (AVH) holder;
             final Parent parentData = getDataSet().get(groupPosition).getParent();
             avh.parentName.setText(parentData.parentName);
-            avh.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.d(TAG, "onClick: ");
-                    parentData.clicked = !parentData.clicked;
-                    avh.imageView.setImageResource(parentData.clicked ?
-                            android.R.drawable.arrow_up_float : android.R.drawable.arrow_down_float);
-                }
+            avh.imageView.setImageResource(parentData.res);
+            avh.root.setBackgroundColor(parentData.color);
+            avh.itemView.setOnClickListener(v -> {
+                Log.d(TAG, "onClick: ");
+                parentData.clicked = !parentData.clicked;
+                int differentColor = parentData.color + 50;
+                avh.root.setBackgroundColor(parentData.clicked ? parentData.color : differentColor);
             });
         }
 
@@ -210,9 +267,11 @@ public class ExpandableWrapper {
         public static class AVH extends AbstractExpandableItemViewHolder {
             TextView parentName;
             ImageView imageView;
+            View root;
 
             public AVH(View itemView) {
                 super(itemView);
+                root = itemView.findViewById(R.id.item_root);
                 parentName = (TextView) itemView.findViewById(R.id.parent_textview);
                 imageView = (ImageView) itemView.findViewById(R.id.parent_imageview);
             }
@@ -220,8 +279,7 @@ public class ExpandableWrapper {
     }
 
 
-    public static class YetAnotherParentAdapter extends DelegableParentAdapter<Parent, Child> {
-
+    public static class HeaderParentAdapter extends DelegableParentAdapter<Parent, Child> {
 
         @Override
         public int getParentViewType() {
@@ -232,16 +290,11 @@ public class ExpandableWrapper {
         public void onBindGroupViewHolder(AbstractExpandableItemViewHolder holder, final int groupPosition, int viewType) {
             final AVH avh = (AVH) holder;
             final Parent parentData = getDataSet().get(groupPosition).getParent();
+            avh.root.setBackgroundColor(Color.BLACK);
             avh.parentName.setText(parentData.parentName);
-            avh.imageView2.setImageResource(parentData.res);
-            avh.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.d(TAG, "onClick: ");
-                    parentData.clicked = !parentData.clicked;
-                    avh.imageView.setImageResource(parentData.clicked ?
-                            android.R.drawable.arrow_up_float : android.R.drawable.arrow_down_float);
-                }
+            avh.itemView.setOnClickListener(v -> {
+                Log.d(TAG, "onClick: ");
+                parentData.clicked = !parentData.clicked;
             });
         }
 
@@ -253,13 +306,13 @@ public class ExpandableWrapper {
 
         public static class AVH extends AbstractExpandableItemViewHolder {
             TextView parentName;
-            ImageView imageView, imageView2;
+            View root;
 
             public AVH(View itemView) {
                 super(itemView);
                 parentName = (TextView) itemView.findViewById(R.id.parent_textview);
-                imageView = (ImageView) itemView.findViewById(R.id.parent_imageview);
-                imageView2 = (ImageView) itemView.findViewById(R.id.parent_imageview_2);
+                root = itemView.findViewById(R.id.parent_header);
+                root.setBackgroundColor(Color.BLACK);
             }
         }
     }

@@ -58,7 +58,7 @@ public class PokesContentProvider extends ContentProvider {
 
     @Nullable
     @Override
-    public Cursor query(    @Nullable Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+    public Cursor query(@Nullable Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         Cursor cursor = null;
         db = dbHelper.getReadableDatabase();
 

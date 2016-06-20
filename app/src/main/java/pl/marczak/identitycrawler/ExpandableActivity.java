@@ -42,7 +42,5 @@ public class ExpandableActivity extends AppCompatActivity {
                         builder.build();
                     }
                 });
-
-
     }
 }

@@ -1,35 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/parent_header"
     android:layout_width="match_parent"
-    android:layout_height="100sp"
-    android:elevation="15sp">
+    android:layout_height="60sp"
+    android:background="@android:color/black">
 
-    <ImageView
-        android:id="@+id/parent_imageview_2"
-        android:layout_width="70sp"
-        android:layout_height="70sp"
-        android:layout_centerVertical="true"
-        android:layout_margin="16sp" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/parent_textview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:padding="15sp"
-        android:textSize="30sp"
-        android:typeface="serif"
-        tools:text="TEST TEXT" />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_margin="10sp"
+            android:layout_toLeftOf="@+id/parent_textview"
+            android:src="@android:drawable/btn_star" />
 
-    <ImageView
-        android:id="@+id/parent_imageview"
-        android:layout_width="50sp"
-        android:layout_height="50sp"
-        android:layout_centerVertical="true"
-        android:layout_margin="10sp"
-        android:layout_toRightOf="@+id/parent_textview"
-        android:background="#000"
-        android:src="@android:drawable/arrow_down_float" />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_margin="10sp"
+            android:layout_toRightOf="@+id/parent_textview"
+            android:src="@android:drawable/btn_star" />
 
+        <TextView
+            android:id="@+id/parent_textview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:padding="15sp"
+            android:textColor="@android:color/white"
+            android:textSize="30sp"
+            android:typeface="sans"
+            tools:text="TEST TEXT" />
+
+    </RelativeLayout>
 </RelativeLayout>
